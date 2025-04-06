@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello-world
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps
+  syncPolicy:
+    syncOptions:
+    - SkipDryRunOnMissingResource=true
+    - CreateNamespace=true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hello-world
+  sources:
+  - repoURL: https://github.com/michalzindulka/k8s-gitops-bootstrap.git
+    targetRevision: main
+    path: gitops/clusters/gke-demo-k8sgibdm/config/hello-world

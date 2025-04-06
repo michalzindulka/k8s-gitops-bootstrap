@@ -1,0 +1,6 @@
+project_id      = "michal-sandbox-434408"
+location        = "europe-west4"
+resource_suffix = "k8sgibdm"
+argocd_version = "7.8.23"
+git_url = "https://github.com/michalzindulka/k8s-gitops-bootstrap.git"
+git_pat = "00000000000000000000000000000000000000"
