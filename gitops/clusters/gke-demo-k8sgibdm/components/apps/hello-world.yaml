@@ -8,6 +8,9 @@ metadata:
 spec:
   project: apps
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
     - SkipDryRunOnMissingResource=true
     - CreateNamespace=true
