@@ -3,13 +3,22 @@ resource "google_container_cluster" "demo" {
   name     = "gke-demo-${var.resource_suffix}"
   location = var.location
 
-  initial_node_count = 1
-  enable_autopilot   = true
-  project            = var.project_id
+  enable_autopilot    = true
+  project             = var.project_id
+  deletion_protection = false
 }
 
 # Retrieve an access token as the Terraform runner and setup providers
 data "google_client_config" "provider" {}
+
+provider "kubectl" {
+  host = "https://${google_container_cluster.demo.endpoint}"
+  cluster_ca_certificate = base64decode(
+    google_container_cluster.demo.master_auth[0].cluster_ca_certificate,
+  )
+  token            = data.google_client_config.provider.access_token
+  load_config_file = false
+}
 
 provider "kubernetes" {
   host  = "https://${google_container_cluster.demo.endpoint}"
@@ -38,6 +47,7 @@ resource "helm_release" "argocd" {
   create_namespace = true
   verify           = false
   version          = var.argocd_version
+  wait             = false
 
   depends_on = [
     google_container_cluster.demo
@@ -70,16 +80,24 @@ resource "kubernetes_secret" "argocd_repo_creds" {
 }
 
 # Bootstrap ArgoCD apps and projects
-resource "kubernetes_manifest" "argocd_apps" {
-  manifest = yamldecode(templatefile("${path.module}/data/argocd-apps.yaml.tfpl", {
+resource "kubectl_manifest" "argocd_apps" {
+  yaml_body = templatefile("${path.module}/data/argocd-apps.yaml.tfpl", {
     cluster_name       = google_container_cluster.demo.name
     git_repository_url = var.git_url
-  }))
+  })
+
+  depends_on = [
+    helm_release.argocd
+  ]
 }
 
-resource "kubernetes_manifest" "argocd_projects" {
-  manifest = yamldecode(templatefile("${path.module}/data/argocd-projects.yaml.tfpl", {
+resource "kubectl_manifest" "argocd_projects" {
+  yaml_body = templatefile("${path.module}/data/argocd-projects.yaml.tfpl", {
     cluster_name       = google_container_cluster.demo.name
     git_repository_url = var.git_url
-  }))
+  })
+
+  depends_on = [
+    helm_release.argocd
+  ]
 }
