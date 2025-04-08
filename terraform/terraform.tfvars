@@ -1,4 +1,4 @@
-project_id      = "michal-sandbox-434408"
+project_id      = "sandbox-123"
 location        = "europe-west4"
 resource_suffix = "k8sgibdm"
 argocd_version = "7.8.23"
